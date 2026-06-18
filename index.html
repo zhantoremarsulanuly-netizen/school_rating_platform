@@ -1,1 +1,66 @@
- 
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>NIS Sport Ministry</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; padding: 40px; margin: 0; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h1 { color: #2c3e50; text-align: center; margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #34495e; color: white; border-radius: 4px 4px 0 0; }
+        tr:hover { background-color: #f9f9f9; }
+        .rating-badge { background-color: #2ecc71; color: white; padding: 4px 8px; border-radius: 6px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏆 NIS Sport Ministry — Рейтинг Спортсменов</h1>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>ФИО Спортсмена</th>
+                    <th>Класс</th>
+                    <th>Вид спорта</th>
+                    <th>Рейтинг (Баллы)</th>
+                </tr>
+            </thead>
+            <tbody id="athletes-table">
+                <!-- Сюда JavaScript вставит данные из Go -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Функция, которая делает запрос к нашему бэкенду на Go
+        async function loadAthletes() {
+            try {
+                const response = await fetch('/api/athletes');
+                const athletes = await response.json();
+                const tableBody = document.getElementById('athletes-table');
+                
+                tableBody.innerHTML = ''; // Очищаем таблицу перед заполнением
+                
+                athletes.forEach(athlete => {
+                    const row = `
+                        <tr>
+                            <td><strong>${athlete.name}</strong></td>
+                            <td>${athlete.class}</td>
+                            <td>${athlete.sport}</td>
+                            <td><span class="rating-badge">${athlete.rating}</span></td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            } catch (error) {
+                console.error("Ошибка загрузки данных:", error);
+            }
+        }
+
+        // Запускаем загрузку при открытии страницы
+        loadAthletes();
+    </script>
+</body>
+</html>
