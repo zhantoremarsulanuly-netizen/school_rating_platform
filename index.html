@@ -4,20 +4,38 @@
     <meta charset="UTF-8">
     <title>NIS Sport Ministry</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; padding: 40px; margin: 0; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        h1 { color: #2c3e50; text-align: center; margin-bottom: 30px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; padding: 40px; margin: 0; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h1 { color: #2c3e50; text-align: center; }
+        form { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #e9ecef; }
+        input, button { padding: 10px; font-size: 14px; border: 1px solid #ccc; border-radius: 6px; }
+        button { background-color: #3498db; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #2980b9; }
+        .btn-qr { background-color: #9b59b6; padding: 5px 10px; font-size: 12px; }
+        .btn-qr:hover { background-color: #8e44ad; }
+        table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #34495e; color: white; border-radius: 4px 4px 0 0; }
-        tr:hover { background-color: #f9f9f9; }
+        th { background-color: #34495e; color: white; }
         .rating-badge { background-color: #2ecc71; color: white; padding: 4px 8px; border-radius: 6px; font-weight: bold; }
+        
+        /* Модальное окно для QR-кода */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .close-btn { background: #e74c3c; margin-top: 15px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🏆 NIS Sport Ministry — Рейтинг Спортсменов</h1>
+        <h1>🏆 NIS Sport Ministry — Верификация</h1>
         
+        <form id="athlete-form">
+            <input type="text" id="name" placeholder="ФИО Спортсмена" required>
+            <input type="text" id="class" placeholder="Класс" required>
+            <input type="text" id="sport" placeholder="Вид спорта" required>
+            <input type="number" id="rating" placeholder="Баллы рейтинга" required>
+            <button type="submit" style="grid-column: span 2;">Добавить спортсмена</button>
+        </form>
+
         <table>
             <thead>
                 <tr>
@@ -25,41 +43,79 @@
                     <th>Класс</th>
                     <th>Вид спорта</th>
                     <th>Рейтинг (Баллы)</th>
+                    <th>Действие</th>
                 </tr>
             </thead>
-            <tbody id="athletes-table">
-                <!-- Сюда JavaScript вставит данные из Go -->
-            </tbody>
+            <tbody id="athletes-table"></tbody>
         </table>
     </div>
 
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="modal-title">QR-код спортсмена</h3>
+            <img id="qr-img" src="" alt="QR Code" style="border: 1px solid #ccc; border-radius: 6px;">
+            <br>
+            <button class="close-btn" onclick="closeModal()">Закрыть</button>
+        </div>
+    </div>
+
     <script>
-        // Функция, которая делает запрос к нашему бэкенду на Go
         async function loadAthletes() {
-            try {
-                const response = await fetch('/api/athletes');
-                const athletes = await response.json();
-                const tableBody = document.getElementById('athletes-table');
-                
-                tableBody.innerHTML = ''; // Очищаем таблицу перед заполнением
-                
-                athletes.forEach(athlete => {
-                    const row = `
-                        <tr>
-                            <td><strong>${athlete.name}</strong></td>
-                            <td>${athlete.class}</td>
-                            <td>${athlete.sport}</td>
-                            <td><span class="rating-badge">${athlete.rating}</span></td>
-                        </tr>
-                    `;
-                    tableBody.innerHTML += row;
-                });
-            } catch (error) {
-                console.error("Ошибка загрузки данных:", error);
-            }
+            const response = await fetch('/api/athletes');
+            const athletes = await response.json();
+            const tableBody = document.getElementById('athletes-table');
+            tableBody.innerHTML = '';
+            
+            // Если в ссылке есть поиск (сканирование QR), отфильтруем или подсветим
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchName = urlParams.get('search');
+
+            athletes.forEach(athlete => {
+                const isSearched = searchName && athlete.name.includes(searchName) ? 'style="background-color: #fff9db;"' : '';
+                tableBody.innerHTML += `
+                    <tr ${isSearched}>
+                        <td><strong>${athlete.name}</strong></td>
+                        <td>${athlete.class}</td>
+                        <td>${athlete.sport}</td>
+                        <td><span class="rating-badge">${athlete.rating}</span></td>
+                        <td><button class="btn-qr" onclick="showQR('${athlete.name}')">Генерировать QR</button></td>
+                    </tr>
+                `;
+            });
         }
 
-        // Запускаем загрузку при открытии страницы
+        function showQR(name) {
+    document.getElementById('modal-title').innerText = `QR-код для: ${name}`;
+    
+    // Формируем ссылку на профиль
+    const profileURL = `http://localhost:8080/?search=${encodeURIComponent(name)}`;
+    
+    // Используем бесплатное открытое API для мгновенной генерации QR-кода
+    document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=${encodeURIComponent(profileURL)}`;
+    
+    document.getElementById('qr-modal').style.display = 'flex';
+}
+        function closeModal() {
+            document.getElementById('qr-modal').style.display = 'none';
+        }
+
+        document.getElementById('athlete-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newAthlete = {
+                name: document.getElementById('name').value,
+                class: document.getElementById('class').value,
+                sport: document.getElementById('sport').value,
+                rating: parseInt(document.getElementById('rating').value)
+            };
+            await fetch('/api/athletes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newAthlete)
+            });
+            document.getElementById('athlete-form').reset();
+            loadAthletes();
+        });
+
         loadAthletes();
     </script>
 </body>
