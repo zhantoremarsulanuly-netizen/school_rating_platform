@@ -2,121 +2,371 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>NIS Sport Ministry</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIS ID — Общешкольная Цифровая Экосистема</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; padding: 40px; margin: 0; }
-        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        h1 { color: #2c3e50; text-align: center; }
-        form { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #e9ecef; }
-        input, button { padding: 10px; font-size: 14px; border: 1px solid #ccc; border-radius: 6px; }
-        button { background-color: #3498db; color: white; border: none; cursor: pointer; font-weight: bold; }
-        button:hover { background-color: #2980b9; }
-        .btn-qr { background-color: #9b59b6; padding: 5px 10px; font-size: 12px; }
-        .btn-qr:hover { background-color: #8e44ad; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #34495e; color: white; }
-        .rating-badge { background-color: #2ecc71; color: white; padding: 4px 8px; border-radius: 6px; font-weight: bold; }
+        :root {
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --primary: #3b82f6;
+            --border-color: #e2e8f0;
+            --table-hover: #f8fafc;
+        }
+
+        body { 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+            background-color: var(--bg-main); 
+            color: var(--text-dark);
+            margin: 0; 
+            padding: 24px;
+        }
+
+        /* Главная двухпанельная сетка (CSS Grid) */
+        .layout {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 24px;
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        /* --- 1. ЛЕВАЯ ПАНЕЛЬ: ПУЛЬТ УПРАВЛЕНИЯ И АДМИНКА --- */
+        .sidebar {
+            background: var(--bg-card);
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            height: fit-content;
+            position: sticky;
+            top: 24px;
+        }
+
+        .sidebar h2 { 
+            font-size: 20px; 
+            margin-top: 0; 
+            margin-bottom: 20px;
+            color: var(--text-dark); 
+            border-bottom: 2px solid var(--bg-main);
+            padding-bottom: 10px;
+        }
+
+        .nav-group { margin-bottom: 24px; }
+        .nav-label { 
+            font-size: 11px; 
+            font-weight: 700; 
+            color: var(--text-muted); 
+            text-transform: uppercase; 
+            margin-bottom: 10px; 
+            letter-spacing: 0.5px;
+        }
         
-        /* Модальное окно для QR-кода */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .close-btn { background: #e74c3c; margin-top: 15px; }
+        select, input, button {
+            width: 100%;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        button.btn-primary {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        button.btn-primary:hover { background-color: #1d4ed8; }
+        button.btn-dark {
+            background-color: var(--text-dark);
+            color: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        button.btn-dark:hover { background-color: #1e293b; }
+
+        /* --- 2. ПРАВАЯ ПАНЕЛЬ: ТРАНСЛЯЦИЯ И ЖИВОЙ РЕЙТИНГ --- */
+        .main-content { display: flex; flex-direction: column; gap: 24px; }
+
+        .header-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
+
+        /* --- 3. ГЕЙМИФИКАЦИЯ: ПЬЕДЕСТАЛ ТОП-3 --- */
+        .podium {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .podium-card {
+            background: var(--bg-card);
+            padding: 24px 20px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border-top: 4px solid #cbd5e1;
+            transition: transform 0.2s;
+        }
+        .podium-card:hover { transform: translateY(-2px); }
+        
+        /* Цвета медалей */
+        .podium-card.rank-1 { border-top-color: #eab308; background: linear-gradient(180deg, #fef08a 0%, #ffffff 45%); }
+        .podium-card.rank-2 { border-top-color: #94a3b8; background: linear-gradient(180deg, #f1f5f9 0%, #ffffff 45%); }
+        .podium-card.rank-3 { border-top-color: #b45309; background: linear-gradient(180deg, #ffedd5 0%, #ffffff 45%); }
+
+        .rank-badge { font-size: 24px; margin-bottom: 8px; font-weight: 700; }
+        .podium-name { font-weight: 700; font-size: 18px; margin-bottom: 6px; color: var(--text-dark); }
+        .podium-class { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+        .podium-score { 
+            display: inline-block;
+            margin-top: 12px;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 16px; 
+            font-weight: 800; 
+        }
+        .rank-1 .podium-score { background: rgba(234, 179, 8, 0.2); color: #854d0e; }
+
+        /* --- ОБЩАЯ ТАБЛИЦА РЕЙТИНГА --- */
+        .table-container {
+            background: var(--bg-card);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 14px 20px; font-size: 14px; }
+        th { background-color: #f8fafc; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border-color); }
+        tr { border-bottom: 1px solid #f1f5f9; transition: background 0.2s; }
+        tr:hover { background-color: var(--table-hover); }
+
+        /* Вспомогательные бейджи стилей */
+        .user-id { color: var(--text-muted); font-weight: 600; font-family: monospace; }
+        .user-badge { background: #f1f5f9; color: var(--text-dark); padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+        .role-badge { background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+        .score-badge { background: #dcfce7; color: #15803d; padding: 6px 12px; border-radius: 6px; font-weight: 700; }
+        
+        .btn-qr-view {
+            background: #f1f5f9; color: var(--text-dark); border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px;
+        }
+        .btn-qr-view:hover { background: #e2e8f0; color: var(--primary); }
+
+        /* МОДАЛЬНОЕ ОКНО ДЛЯ QR-КОДОВ */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 24px; border-radius: 20px; text-align: center; width: 280px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border: 1px solid var(--border-color); }
+        .close-btn { background: #ef4444; color: white; border: none; margin-top: 16px; font-weight: 600; cursor: pointer; padding: 10px; }
+        .close-btn:hover { background: #dc2626; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🏆 NIS Sport Ministry — Верификация</h1>
-        
-        <form id="athlete-form">
-            <input type="text" id="name" placeholder="ФИО Спортсмена" required>
-            <input type="text" id="class" placeholder="Класс" required>
-            <input type="text" id="sport" placeholder="Вид спорта" required>
-            <input type="number" id="rating" placeholder="Баллы рейтинга" required>
-            <button type="submit" style="grid-column: span 2;">Добавить спортсмена</button>
-        </form>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>ФИО Спортсмена</th>
-                    <th>Класс</th>
-                    <th>Вид спорта</th>
-                    <th>Рейтинг (Баллы)</th>
-                    <th>Действие</th>
-                </tr>
-            </thead>
-            <tbody id="athletes-table"></tbody>
-        </table>
+    <div class="layout">
+        
+        <div class="sidebar">
+            <h2>NIS ID Консоль</h2>
+            
+            <div class="nav-group">
+                <div class="nav-label">Выбор Лиги / Направления</div>
+                <select id="filter-category" onchange="loadData()">
+                    <option value="">🌍 Общий рейтинг школы</option>
+                    <option value="Спорт">⚽ Спортивная Лига</option>
+                    <option value="Академия">🧠 Академическая Лига</option>
+                    <option value="Волонтерство">❤️ Волонтерский Корпус</option>
+                </select>
+
+                <div class="nav-label">Классы / Параллели</div>
+                <select id="filter-class" onchange="loadData()">
+                    <option value="">Все классы</option>
+                    <option value="9A">9A класс</option>
+                    <option value="10B">10B класс</option>
+                    <option value="11A">11A класс</option>
+                </select>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-label">Шаг 1: Регистрация Ученика</div>
+                <form id="user-form">
+                    <input type="text" id="reg-name" placeholder="ФИО Ученика" required>
+                    <input type="text" id="reg-class" placeholder="Класс (например, 10B)" required>
+                    <input type="text" id="reg-role" placeholder="Роль / Статус (например, Ученик)">
+                    <button type="submit" class="btn-primary">Создать профиль</button>
+                </form>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-label">Шаг 2: Начисление Достижений</div>
+                <form id="ach-form">
+                    <input type="number" id="ach-uid" placeholder="Системный ID Ученика" required>
+                    <select id="ach-cat">
+                        <option value="Спорт">⚽ Спорт</option>
+                        <option value="Академия">🧠 Академия</option>
+                        <option value="Волонтерство">❤️ Волонтерство</option>
+                    </select>
+                    <input type="text" id="ach-text" placeholder="Описание (за какой подвиг)" required>
+                    <input type="number" id="ach-points" placeholder="Количество баллов (+)" required>
+                    <button type="submit" class="btn-dark">Записать достижение</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="header-area">
+                <h1 class="header-title">🏆 Цифровая Экосистема NIS</h1>
+            </div>
+            
+            <div class="podium" id="podium-container">
+                </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>ФИО Ученика</th>
+                            <th>Класс</th>
+                            <th>Статус / Должность</th>
+                            <th>Общий Рейтинг</th>
+                            <th>Цифровой СЛЕД</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <div id="qr-modal" class="modal">
         <div class="modal-content">
-            <h3 id="modal-title">QR-код спортсмена</h3>
-            <img id="qr-img" src="" alt="QR Code" style="border: 1px solid #ccc; border-radius: 6px;">
-            <br>
-            <button class="close-btn" onclick="closeModal()">Закрыть</button>
+            <h3 id="modal-title" style="margin: 0 0 16px 0; font-size: 18px;">ID Бейдж</h3>
+            <img id="qr-img" src="" alt="QR-код загружается..." style="width:220px; height:220px; border-radius:12px; border: 1px solid var(--border-color);">
+            <button class="close-btn" onclick="closeModal()">Закрыть паспорт</button>
         </div>
     </div>
 
     <script>
-        async function loadAthletes() {
-            const response = await fetch('/api/athletes');
-            const athletes = await response.json();
-            const tableBody = document.getElementById('athletes-table');
-            tableBody.innerHTML = '';
+        async function loadData() {
+            // Считываем текущие настройки фильтров (Фича 2)
+            const category = document.getElementById('filter-category').value;
+            const className = document.getElementById('filter-class').value;
             
-            // Если в ссылке есть поиск (сканирование QR), отфильтруем или подсветим
-            const urlParams = new URLSearchParams(window.location.search);
-            const searchName = urlParams.get('search');
+            // Отправляем асинхронный AJAX-запрос к твоему Go-бэкенду
+            const response = await fetch(`/api/users?category=${category}&class=${className}`);
+            const users = await response.json();
+            
+            const podiumContainer = document.getElementById('podium-container');
+            const tableBody = document.getElementById('users-table');
+            
+            podiumContainer.innerHTML = '';
+            tableBody.innerHTML = '';
 
-            athletes.forEach(athlete => {
-                const isSearched = searchName && athlete.name.includes(searchName) ? 'style="background-color: #fff9db;"' : '';
+            // Считываем параметры сканирования QR-кода (Имитация верификации на ходу)
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchId = urlParams.get('search_id');
+
+            // Изолируем ТОП-3 для создания Пьедестала (Фича 3)
+            const top3 = users.slice(0, 3);
+            top3.forEach((user, index) => {
+                const medals = ['🥇 1 МЕСТО', '🥈 2 МЕСТО', '🥉 3 МЕСТО'];
+                podiumContainer.innerHTML += `
+                    <div class="podium-card rank-${index + 1}">
+                        <div class="rank-badge">${medals[index]}</div>
+                        <div class="podium-name">${user.name}</div>
+                        <div class="podium-class">${user.class} • ${user.role}</div>
+                        <div class="podium-score">${user.total_rating} БАЛЛОВ</div>
+                    </div>
+                `;
+            });
+
+            // Отрисовываем всех учеников в общую таблицу результатов
+            users.forEach((user) => {
+                // Если ID совпадает со сканированным QR-кодом — включаем яркую подсветку строки
+                const isVerified = searchId && parseInt(searchId) === user.id ? 'style="background-color: #fef08a; border: 2px solid #eab308;"' : '';
+                
                 tableBody.innerHTML += `
-                    <tr ${isSearched}>
-                        <td><strong>${athlete.name}</strong></td>
-                        <td>${athlete.class}</td>
-                        <td>${athlete.sport}</td>
-                        <td><span class="rating-badge">${athlete.rating}</span></td>
-                        <td><button class="btn-qr" onclick="showQR('${athlete.name}')">Генерировать QR</button></td>
+                    <tr ${isVerified}>
+                        <td><span class="user-id">#${user.id}</span></td>
+                        <td><strong>${user.name}</strong></td>
+                        <td><span class="user-badge">${user.class}</span></td>
+                        <td><span class="role-badge">${user.role}</span></td>
+                        <td><span class="score-badge">${user.total_rating} PTS</span></td>
+                        <td><button class="btn-qr-view" onclick="showQR(${user.id}, '${user.name}')">Генерировать Бейдж</button></td>
                     </tr>
                 `;
             });
         }
 
-        function showQR(name) {
-    document.getElementById('modal-title').innerText = `QR-код для: ${name}`;
-    
-    // Формируем ссылку на профиль
-    const profileURL = `http://localhost:8080/?search=${encodeURIComponent(name)}`;
-    
-    // Используем бесплатное открытое API для мгновенной генерации QR-кода
-    document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=${encodeURIComponent(profileURL)}`;
-    
-    document.getElementById('qr-modal').style.display = 'flex';
-}
-        function closeModal() {
-            document.getElementById('qr-modal').style.display = 'none';
+        // Вызов модального окна и запрос QR у Go-сервера
+        function showQR(id, name) {
+            document.getElementById('modal-title').innerText = `ID Паспорт: ${name}`;
+            document.getElementById('qr-img').src = `/api/qrcode?id=${id}`;
+            document.getElementById('qr-modal').style.display = 'flex';
         }
 
-        document.getElementById('athlete-form').addEventListener('submit', async (e) => {
+        function closeModal() { 
+            document.getElementById('qr-modal').style.display = 'none'; 
+        }
+
+        // Форма 1: Отправка нового студента в базу SQLite
+        document.getElementById('user-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const newAthlete = {
-                name: document.getElementById('name').value,
-                class: document.getElementById('class').value,
-                sport: document.getElementById('sport').value,
-                rating: parseInt(document.getElementById('rating').value)
+            const data = {
+                name: document.getElementById('reg-name').value,
+                class: document.getElementById('reg-class').value,
+                role: document.getElementById('reg-role').value || "Ученик"
             };
-            await fetch('/api/athletes', {
+            await fetch('/api/users', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newAthlete)
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
             });
-            document.getElementById('athlete-form').reset();
-            loadAthletes();
+            document.getElementById('user-form').reset();
+            loadData();
         });
 
-        loadAthletes();
+        // Форма 2: Связанное начисление баллов по ID
+        document.getElementById('ach-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                user_id: parseInt(document.getElementById('ach-uid').value),
+                category: document.getElementById('ach-cat').value,
+                text: document.getElementById('ach-text').value,
+                points: parseInt(document.getElementById('ach-points').value)
+            };
+            const res = await fetch('/api/achievements', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            if (res.status === 404) {
+                alert("Ошибка контроля: Ученик с таким системным ID не зарегистрирован!");
+            }
+            document.getElementById('ach-form').reset();
+            loadData();
+        });
+
+        // Первичный запуск трансляции при загрузке страницы
+        loadData();
     </script>
 </body>
 </html>
