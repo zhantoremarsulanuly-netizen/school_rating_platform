@@ -39,8 +39,8 @@ func initDatabase() {
 	userTable := `
 	CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT NOT EXISTS,
-		class TEXT NOT EXISTS,
+		name TEXT NOT NULL,
+		class TEXT NOT NULL,
 		role TEXT DEFAULT 'Ученик'
 	);`
 
@@ -48,10 +48,10 @@ func initDatabase() {
 	achievementTable := `
 	CREATE TABLE IF NOT EXISTS achievements (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		user_id INTEGER NOT EXISTS,
-		category TEXT NOT EXISTS,
-		text TEXT NOT EXISTS,
-		points INTEGER NOT EXISTS,
+		user_id INTEGER NOT NULL,
+		category TEXT NOT NULL,
+		text TEXT NOT NULL,
+		points INTEGER NOT NULL,
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 	);`
 
@@ -226,10 +226,10 @@ func qrCodeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Формируем ссылку обратного сканирования верификации (подсветка при наведении камеры смартфона)
+	// Формируем ссылку обратного сканирования верификации
 	targetURL := fmt.Sprintf("http://%s/?search_id=%d", r.Host, id)
 	
-	// Внешнее ультра-легкое API генерации QR-матрицы без скачивания тяжелых библиотек
+	// Внешнее API генерации QR-матрицы
 	qrProvider := fmt.Sprintf("https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=%s", targetURL)
 
 	// Перенаправляем поток картинки сразу в браузер клиента
@@ -250,7 +250,7 @@ func main() {
 	// Принудительно включаем каскадные ключи для реляционных связей в SQLite
 	_, _ = db.Exec("PRAGMA foreign_keys = ON;")
 
-	// Проверяем и разворачиваем таблицы, если файла nis_life.db еще нет на диске
+	// Проверяем и разворачиваем таблицы
 	initDatabase()
 
 	// Подключаем автоматическую раздачу статического фронтенда (index.html) из корня проекта
