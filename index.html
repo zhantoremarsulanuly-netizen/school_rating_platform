@@ -265,12 +265,45 @@
     </div>
 
     <script>
+        // 1. КОНТРОЛЬ ДОСТУПА (Ученик / Администратор)
+        function checkUserRole() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isAdmin = urlParams.get('admin'); // Ищем параметр ?admin=true в адресной строке
+            const sidebar = document.querySelector('.sidebar');
+
+            if (isAdmin === 'true') {
+                // Если зашли как админ (?admin=true) — показываем все элементы управления
+                console.log("Статус: Администратор системы NIS ID");
+            } else {
+                // Если зашел обычный ученик — полностью изолируем и скрываем административные формы
+                const navGroups = document.querySelectorAll('.nav-group');
+                if (navGroups.length >= 3) {
+                    navGroups[1].style.display = 'none'; // Прячем форму регистрации ученика
+                    navGroups[2].style.display = 'none'; // Прячем форму начисления баллов
+                }
+                
+                // Перестраиваем сетку дашборда на весь экран, чтобы таблица была широкой
+                document.querySelector('.layout').style.gridTemplateColumns = '1fr';
+                
+                // Стилизуем боковую панель под верхнюю компактную плашку для фильтров
+                sidebar.style.background = 'none';
+                sidebar.style.boxShadow = 'none';
+                sidebar.style.padding = '0';
+                sidebar.style.width = '100%';
+                
+                // Переносим фильтры в самый верх над пьедесталом
+                document.querySelector('.layout').prepend(sidebar);
+                
+                console.log("Статус: Авторизован как Ученик NIS");
+            }
+        }
+
+        // 2. АСИНХРОННАЯ ЗАГРУЗКА ДАННЫХ С GO-БЭКЕНДА
         async function loadData() {
-            // Считываем текущие настройки фильтров (Фича 2)
             const category = document.getElementById('filter-category').value;
             const className = document.getElementById('filter-class').value;
             
-            // Отправляем асинхронный AJAX-запрос к твоему Go-бэкенду
+            // Запрос к API твоего сервера
             const response = await fetch(`/api/users?category=${category}&class=${className}`);
             const users = await response.json();
             
@@ -280,11 +313,10 @@
             podiumContainer.innerHTML = '';
             tableBody.innerHTML = '';
 
-            // Считываем параметры сканирования QR-кода (Имитация верификации на ходу)
             const urlParams = new URLSearchParams(window.location.search);
             const searchId = urlParams.get('search_id');
 
-            // Изолируем ТОП-3 для создания Пьедестала (Фича 3)
+            // Генерация Пьедестала Топ-3
             const top3 = users.slice(0, 3);
             top3.forEach((user, index) => {
                 const medals = ['🥇 1 МЕСТО', '🥈 2 МЕСТО', '🥉 3 МЕСТО'];
@@ -298,9 +330,9 @@
                 `;
             });
 
-            // Отрисовываем всех учеников в общую таблицу результатов
+            // Заполнение таблицы остальных учеников
             users.forEach((user) => {
-                // Если ID совпадает со сканированным QR-кодом — включаем яркую подсветку строки
+                // Если строка открыта через сканирование QR — подсвечиваем золотым цветом
                 const isVerified = searchId && parseInt(searchId) === user.id ? 'style="background-color: #fef08a; border: 2px solid #eab308;"' : '';
                 
                 tableBody.innerHTML += `
@@ -316,7 +348,7 @@
             });
         }
 
-        // Вызов модального окна и запрос QR у Go-сервера
+        // 3. УПРАВЛЕНИЕ МОДАЛЬНЫМ ОКНОМ QR
         function showQR(id, name) {
             document.getElementById('modal-title').innerText = `ID Паспорт: ${name}`;
             document.getElementById('qr-img').src = `/api/qrcode?id=${id}`;
@@ -327,7 +359,7 @@
             document.getElementById('qr-modal').style.display = 'none'; 
         }
 
-        // Форма 1: Отправка нового студента в базу SQLite
+        // 4. ОБРАБОТКА ОТПРАВКИ ФОРМ НА СЕРВЕР (С секретным токеном в заголовках)
         document.getElementById('user-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const data = {
@@ -337,14 +369,16 @@
             };
             await fetch('/api/users', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Admin-Token': 'nis_admin_2026' // Проверка безопасности на бэкенде
+                },
                 body: JSON.stringify(data)
             });
             document.getElementById('user-form').reset();
             loadData();
         });
 
-        // Форма 2: Связанное начисление баллов по ID
         document.getElementById('ach-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const data = {
@@ -355,18 +389,21 @@
             };
             const res = await fetch('/api/achievements', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Admin-Token': 'nis_admin_2026'
+                },
                 body: JSON.stringify(data)
             });
-            if (res.status === 404) {
-                alert("Ошибка контроля: Ученик с таким системным ID не зарегистрирован!");
-            }
+            if (res.status === 403) alert("Критическая ошибка: Отказано в доступе! Вы не админ.");
+            if (res.status === 404) alert("Ошибка: Ученик с таким ID не зарегистрирован в базе данных.");
             document.getElementById('ach-form').reset();
             loadData();
         });
 
-        // Первичный запуск трансляции при загрузке страницы
-        loadData();
+        // 5. ИНИЦИАЛИЗАЦИЯ ПРИ ЗАПУСКЕ СТРАНИЦЫ
+        checkUserRole(); // Сначала проверяем права и настраиваем внешний вид
+        loadData();      // Затем запрашиваем данные у Go
     </script>
 </body>
 </html>
